@@ -1,6 +1,6 @@
 #!/usr/local/bin/perl -w
 
-# Copyright 1998-2004, Paul Johnson (pjcj@cpan.org)
+# Copyright 1998-2005, Paul Johnson (pjcj@cpan.org)
 
 # This software is free.  It is licensed under the same terms as Perl itself.
 
@@ -16,8 +16,8 @@ use ExtUtils::Manifest "maniread";
 
 $| = 1;
 
-my $Version = "1.14";
-my $Date    = "5th April 2004";
+my $Version = "1.15";
+my $Date    = "3rd May 2005";
 my $Author  = 'pjcj@cpan.org';
 
 my @perlbug = ("perlbug", "-a", $Author,

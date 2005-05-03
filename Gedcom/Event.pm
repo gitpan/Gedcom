@@ -1,4 +1,4 @@
-# Copyright 1999-2004, Paul Johnson (pjcj@cpan.org)
+# Copyright 1999-2005, Paul Johnson (pjcj@cpan.org)
 
 # This software is free.  It is licensed under the same terms as Perl itself.
 
@@ -13,10 +13,10 @@ require 5.005;
 
 package Gedcom::Event;
 
-use Gedcom::Record 1.14;
+use Gedcom::Record 1.15;
 
 use vars qw($VERSION @ISA);
-$VERSION = "1.14";
+$VERSION = "1.15";
 @ISA     = qw( Gedcom::Record );
 
 # sub type
@@ -45,7 +45,7 @@ __END__
 
 Gedcom::Event - a module to manipulate Gedcom events
 
-Version 1.14 - 5th April 2004
+Version 1.15 - 3rd May 2005
 
 =head1 SYNOPSIS
 

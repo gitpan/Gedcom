@@ -1,4 +1,4 @@
-# Copyright 1998-2004, Paul Johnson (pjcj@cpan.org)
+# Copyright 1998-2005, Paul Johnson (pjcj@cpan.org)
 
 # This software is free.  It is licensed under the same terms as Perl itself.
 
@@ -16,7 +16,7 @@ package Gedcom::Item;
 use Symbol;
 
 use vars qw($VERSION);
-$VERSION = "1.14";
+$VERSION = "1.15";
 
 sub new
 {
@@ -652,7 +652,7 @@ __END__
 
 Gedcom::Item - a base class for Gedcom::Grammar and Gedcom::Record
 
-Version 1.14 - 5th April 2004
+Version 1.15 - 3rd May 2005
 
 =head1 SYNOPSIS
 
