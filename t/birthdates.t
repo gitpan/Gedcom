@@ -1,13 +1,13 @@
 #!/usr/local/bin/perl -w
 
-# Copyright 1999-2005, Paul Johnson (pjcj@cpan.org)
+# Copyright 1999-2009, Paul Johnson (paul@pjcj.net)
 
 # This software is free.  It is licensed under the same terms as Perl itself.
 
 # The latest version of this software should be available from my homepage:
 # http://www.pjcj.net
 
-# Version 1.15 - 3rd May 2005
+# Version 1.16 - 24th April 2009
 
 use strict;
 
@@ -19,7 +19,7 @@ BEGIN { Test::plan tests => 161 }
 
 use lib -d "t" ? "t" : "..";
 
-use Gedcom 1.15;
+use Gedcom 1.16;
 use Engine;
 
 sub ok

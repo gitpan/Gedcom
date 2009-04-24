@@ -1,5 +1,6 @@
 0 HEAD
 1   SOUR PAF 2.2
+2     VERS 2.2
 1   DEST PAF
 1   DATE Friday, 20th November 1992
 1   FILE ROYALS.GED
@@ -14,7 +15,7 @@
 2     CONC should use the original if you want royal genealogy.  Contact me
 2     CONC if you cannot locate the original.
 2     CONC
-2     CONC Paul Johnson (pjcj@cpan.org)
+2     CONC Paul Johnson (paul@pjcj.net)
 2     CONC
 2     CONC >> In a message to Cliff Manis (cmanis@csoftec.csf.com)
 2     CONC >> Denis Reid wrote the following:

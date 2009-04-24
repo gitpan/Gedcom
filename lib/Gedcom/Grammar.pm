@@ -1,4 +1,4 @@
-# Copyright 1998-2005, Paul Johnson (pjcj@cpan.org)
+# Copyright 1998-2009, Paul Johnson (paul@pjcj.net)
 
 # This software is free.  It is licensed under the same terms as Perl itself.
 
@@ -15,10 +15,10 @@ package Gedcom::Grammar;
 
 use Data::Dumper;
 
-use Gedcom::Item 1.15;
+use Gedcom::Item 1.16;
 
 use vars qw($VERSION @ISA);
-$VERSION = "1.15";
+$VERSION = "1.16";
 @ISA     = qw( Gedcom::Item );
 
 sub structure
@@ -41,6 +41,7 @@ sub item
   my ($tag) = @_;
   return unless defined $tag;
   my $valid_items = $self->valid_items;
+  # use Data::Dumper; print "[$tag] -- ", Dumper($self), Dumper $valid_items;
   return unless exists $valid_items->{$tag};
   map { $_->{grammar} } @{$valid_items->{$tag}}
 }
@@ -138,7 +139,7 @@ __END__
 
 Gedcom::Grammar - a module to manipulate Gedcom grammars
 
-Version 1.15 - 3rd May 2005
+Version 1.16 - 24th April 2009
 
 =head1 SYNOPSIS
 

@@ -1,4 +1,4 @@
-# Copyright 1998-2005, Paul Johnson (pjcj@cpan.org)
+# Copyright 1998-2009, Paul Johnson (paul@pjcj.net)
 
 # This software is free.  It is licensed under the same terms as Perl itself.
 
@@ -16,7 +16,7 @@ package Gedcom::Item;
 use Symbol;
 
 use vars qw($VERSION);
-$VERSION = "1.15";
+$VERSION = "1.16";
 
 sub new
 {
@@ -47,13 +47,25 @@ sub copy
   $item
 }
 
+sub hash
+{
+  my $self = shift;
+  my $item  = {};
+  for my $key (qw(level xref tag value pointer min max))
+  {
+    $item->{$key} = $self->{$key} if exists $self->{$key}
+  }
+  $item->{items} = [ map { $_->hash } @{$self->_items} ];
+  $item
+}
+
 sub read
 {
   my $self = shift;
 
 # $self->{fh} = FileHandle->new($self->{file})
   $self->{fh} = gensym;
-  open $self->{fh}, $self->{file} or die "Can't open file $self->{file}: $!";
+  open $self->{fh}, $self->{file} or die "Can't open file $self->{file}: $!\n";
   binmode $self->{fh};
 
   # find out how big the file is
@@ -393,6 +405,7 @@ sub write
 {
   my $self = shift;
   my ($fh, $level, $flush) = @_;
+  $level ||= 0;
   my @p;
   push(@p, $level . "  " x $level)         unless $flush || $level < 0;
   push(@p, "\@$self->{xref}\@")            if     defined $self->{xref} &&
@@ -652,7 +665,7 @@ __END__
 
 Gedcom::Item - a base class for Gedcom::Grammar and Gedcom::Record
 
-Version 1.15 - 3rd May 2005
+Version 1.16 - 24th April 2009
 
 =head1 SYNOPSIS
 

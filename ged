@@ -1,13 +1,13 @@
 #!/usr/local/bin/perl -w
 
-# Copyright 1998-2005, Paul Johnson (pjcj@cpan.org)
+# Copyright 1998-2009, Paul Johnson (paul@pjcj.net)
 
 # This software is free.  It is licensed under the same terms as Perl itself.
 
 # The latest version of this software should be available from my homepage:
 # http://www.pjcj.net
 
-# Version 1.15 - 3rd May 2005
+# Version 1.16 - 24th April 2009
 
 use strict;
 
@@ -18,10 +18,10 @@ use diagnostics;
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
-use Gedcom 1.15;
+use Gedcom 1.16;
 
 use vars qw( $VERSION );
-$VERSION = "1.15";
+$VERSION = "1.16";
 
 eval "use Date::Manip";
 Date_Init("DateFormat=UK") if $INC{"Date/Manip.pm"};
@@ -43,6 +43,74 @@ sub main()
     # read_only       => 1,
   );
   if (1)
+  {
+      $ged = Gedcom->new(grammar_version => 5.5 );
+      my $record=$ged->add_source();
+      my $obje=$record->add("obje");
+      $obje->add("form", "png");
+      $obje->add("file", "somefile");
+      $ged->write("$gedcom_file.new");
+  }
+  if (0)
+  {
+    my $i = $ged->get_individual("I1");
+    print "NOTE  [", exists $i->get_record("note")->{grammar}{value}, "]\n";
+    print "BIRT  [", exists $i->get_record("birt")->{grammar}{value}, "]\n";
+  }
+  if (0)
+  {
+    # use DDS; print STDERR Dump $ged;
+    my $i = $ged->get_individual("I8");
+    print $i->{grammar}->valid_items->{NAME}[0]{max};
+    print $i->{grammar}->valid_items->{SEX}[0]{max};
+    print "\n";
+    for ($i->items)
+    {
+        my $t = $_->{tag};
+        my $vi = $i->{grammar}->valid_items;
+        print "$t: $vi->{$t}[0]{min} - $vi->{$t}[0]{max}\n";
+    }
+  }
+  if (0)
+  {
+    print "\nchanging BIRT to CHR...";
+    my $i = $ged->get_individual("I8");
+    for ($i->items)
+    {
+      $_->{tag} = "CHR" if $_->{tag} eq "BIRT";
+    }
+    $ged->validate;
+    print "\nwriting...";
+    $ged->write("$gedcom_file.new");
+  }
+  if (0)
+  {
+    $ged->resolve_xrefs;
+    print "\nmerging notes...";
+    my @notes = grep $_->tag eq "NOTE", $ged->{record}->items;
+    my %notes;
+    my @dups;
+    for my $note (@notes)
+    {
+        my $text = $note->full_value;
+        if (exists $notes{$text})
+        {
+            print "NOTE ", $note->xref, " matches $notes{$text}\n";
+            $note->{xref} = $notes{$text};
+            push @dups, $note;
+        }
+        else
+        {
+            $notes{$text} = $note->xref;
+        }
+    }
+    $ged->unresolve_xrefs;
+    $_->delete for @dups;
+    $ged->validate;
+    print "\nwriting...";
+    $ged->write("$gedcom_file.new");
+  }
+  if (0)
   {
     my $age = sub { Date_Cmp(ParseDate($a->get_value("birth date") || ""),
                              ParseDate($b->get_value("birth date") || "")) };
@@ -88,7 +156,7 @@ sub main()
 # print "\nnormalising dates...";
 # $ged->normalise_dates("%E %b %Y");
 # sleep 6000;
-  if (1)
+  if (0)
   {
     print "\nwriting xml...";
     $ged->write_xml("$gedcom_file.xml");

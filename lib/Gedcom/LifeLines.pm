@@ -1,4 +1,4 @@
-# Copyright 1999-2005, Paul Johnson (pjcj@cpan.org)
+# Copyright 1999-2009, Paul Johnson (paul@pjcj.net)
 
 # This software is free.  It is licensed under the same terms as Perl itself.
 
@@ -20,10 +20,10 @@ BEGIN
   eval "use Roman ()";
 }
 
-use Gedcom 1.15;
+use Gedcom 1.16;
 
 use vars qw($VERSION @ISA @EXPORT);
-$VERSION = "1.15";
+$VERSION = "1.16";
 @ISA     = qw( Exporter );
 @EXPORT  = qw
 (
@@ -175,7 +175,8 @@ sub baptism
   return unless $indi;
   $indi->tag_record("BAPM") ||
   $indi->tag_record("BAPL") ||
-  $indi->tag_record("CHR")
+  $indi->tag_record("CHR")  ||
+  $indi->tag_record("CHRA")
 }
 
 sub burial
@@ -1261,7 +1262,7 @@ __END__
 
 Gedcom::LifeLines - functions for lines2perl
 
-Version 1.15 - 3rd May 2005
+Version 1.16 - 24th April 2009
 
 =head1 SYNOPSIS
 
