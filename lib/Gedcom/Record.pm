@@ -1,4 +1,4 @@
-# Copyright 1998-2009, Paul Johnson (paul@pjcj.net)
+# Copyright 1998-2012, Paul Johnson (paul@pjcj.net)
 
 # This software is free.  It is licensed under the same terms as Perl itself.
 
@@ -14,14 +14,14 @@ require 5.005;
 package Gedcom::Record;
 
 use vars qw($VERSION @ISA $AUTOLOAD);
-$VERSION = "1.16";
+$VERSION = "1.17";
 @ISA     = qw( Gedcom::Item );
 
 use Carp;
 BEGIN { eval "use Date::Manip" }             # We'll use this if it is available
 
-use Gedcom::Item       1.16;
-use Gedcom::Comparison 1.16;
+use Gedcom::Item       1.17;
+use Gedcom::Comparison 1.17;
 
 BEGIN
 {
@@ -134,7 +134,7 @@ sub add_record
   (
     gedcom   => $self->{gedcom},
     callback => $self->{callback},
-    %args
+    tag      => $args{tag},
   );
 
   if (!defined $self->{grammar})
@@ -143,7 +143,34 @@ sub add_record
   }
   elsif (my @g = $self->{grammar}->item($args{tag}))
   {
-    $self->parse($record, $g[0]);
+    # use DDS; print Dump \@g;
+    my $grammar = $g[0];
+    for my $g (@g)
+    {
+      # print "testing $args{tag} ", $args{val}  // "undef", " against ",
+                                   # $g->{value} // "undef", "\n";
+      if ($args{tag} eq "NOTE")
+      {
+        if (( defined $args{xref} && $g->{value} =~ /xref/i) ||
+            (!defined $args{xref} && $g->{value} !~ /xref/i))
+        {
+          # print "note match\n";
+          $grammar = $g;
+          last;
+        }
+      }
+      else
+      {
+        if (( defined $args{val} &&  $g->{value}) ||
+            (!defined $args{val} && !$g->{value}))
+        {
+          # print "match\n";
+          $grammar = $g;
+          last;
+        }
+      }
+    }
+    $self->parse($record, $grammar);
   }
   else
   {
@@ -158,27 +185,34 @@ sub add_record
 sub add
 {
   my $self = shift;
-  my $val;
-  $val = pop if @_ > 1 && ref $_[-1] ne "ARRAY";
-
-  my @funcs = map { ref() ? $_ : split } @_;
-  $funcs[-1] = [$funcs[-1], 0] unless ref $funcs[-1];
-  my $r = $self->get_and_create(@funcs);
-
-  if (defined $val)
+  my ($xref, $val);
+  if (@_ > 1 && ref $_[-1] ne "ARRAY")
   {
+    $val = pop;
     if (UNIVERSAL::isa($val, "Gedcom::Record"))
     {
-      $r->{value} = $val->{xref};
-      $self->{gedcom}{xrefs}{$val->{xref}} = $val;
-    }
-    else
-    {
-      $r->{value} = $val;
+      $xref = $val;
+      $val  = undef;
     }
   }
 
-  $r
+  my @funcs = map { ref() ? $_ : split } @_;
+  $funcs[-1] = [$funcs[-1], 0] unless ref $funcs[-1];
+  push @{$funcs[-1]}, { xref => $xref, val => $val };
+  my $record = $self->get_and_create(@funcs);
+
+  if (defined $xref)
+  {
+    $record->{value} = $xref->{xref};
+    $self->{gedcom}{xrefs}{$xref->{xref}} = $xref;
+  }
+
+  if (defined $val)
+  {
+    $record->{value} = $val;
+  }
+
+  $record
 }
 
 sub set
@@ -207,11 +241,14 @@ sub get_and_create
   my $self = shift;
   my @funcs = @_;
 
+  # use DDS; print "get_and_create: " , Dump \@funcs;
+
   my $rec = $self;
   for my $f (0 .. $#funcs)
   {
-    my ($func, $count) = ($funcs[$f], 1);
-    ($func, $count) = @$func if ref $func eq "ARRAY";
+    my ($func, $count, $args) = ($funcs[$f], 1);
+    $args = {} unless defined $args;
+    ($func, $count, $args) = @$func if ref $func eq "ARRAY";
     $count--;
 
     if (ref $func)
@@ -229,18 +266,19 @@ sub get_and_create
       $record = $func;
     }
 
-    # print "$func [$count]\n";
+    # print "$func [$count] - $record\n";
 
     my @records = $rec->tag_record($record);
 
     if ($count < 0)
     {
-      $rec = $rec->add_record(tag => $record);
+      $rec = $rec->add_record(tag => $record, %$args);
     }
     elsif ($#records < $count)
     {
       my $new;
-      $new = $rec->add_record(tag => $record) for (0 .. @records - $count);
+      $new = $rec->add_record(tag => $record, %$args)
+        for (0 .. @records - $count);
       $rec = $new;
     }
     else
@@ -514,6 +552,10 @@ sub normalise_dates
     warn "Date::Manip.pm is required to use normalise_dates()";
     return;
   }
+  if( eval { Date::Manip->VERSION( 6 ); } and !eval { Date::Manip->VERSION( 6.13 ); } ) {
+    warn "Unable to normalize dates with this version of Date::Manip. Please upgrade to version 6.13.";
+    return;
+  }
   my $format = shift || "%A, %E %B %Y";
   if (defined $self->{tag} && $self->{tag} =~ /^date$/i)
   {
@@ -545,7 +587,7 @@ sub renumber
   my ($args, $recurse) = @_;
   # TODO - add the xref if there is supposed to be one
   return if exists $self->{recursed} or not defined $self->{xref};
-  # we can't actaully change the xrefs until the end
+  # we can't actually change the xrefs until the end
   my $x = $self->{tag} eq "SUBM" ? "SUBM" : substr $self->{tag}, 0, 1;
   $self->{new_xref} = $x . ++$args->{$self->{tag}}
     unless exists $self->{new_xref};
@@ -606,7 +648,7 @@ __END__
 
 Gedcom::Record - a module to manipulate Gedcom records
 
-Version 1.16 - 24th April 2009
+Version 1.17 - 29th December 2012
 
 =head1 SYNOPSIS
 
@@ -648,11 +690,11 @@ Derived from Gedcom::Item.
 
 Some of the more important hash members are:
 
-=head2 $record->{new_xref}
+=head2 $record-E<gt>{new_xref}
 
 Used by renumber().
 
-=head2 $record->{recursed}
+=head2 $record-E<gt>{recursed}
 
 Used by renumber().
 
@@ -747,7 +789,7 @@ Parse a Gedcom record.
 
 Match a Gedcom::Record against a Gedcom::Grammar.  Warn of any
 mismatches, and associate the Gedcom::Grammar with the Gedcom::Record as
-$record->{grammar}.  Do this recursively.
+$record-E<gt>{grammar}.  Do this recursively.
 
 =head2 collect_xrefs
 
@@ -843,157 +885,3 @@ description in lower case, the function will not be pre-declared and you
 will need to qualify it or C<use subs>.
 
 =cut
-
-=begin if we cannot make the min/max assumptions specified in
-       Gedcom::Grammar::valid_items
-
-use as:
-  my @items = @{$ged->{record}{items}};
-  my ($m, $w) =
-   $ged->{record}->validate_structure($ged->{record}{grammar}, \@items, 1);
-  warn $w if $w;
-
-sub validate_grammar
-{
-  my $self = shift;
-  my ($grammar, $items, $all) = @_;
-  $I++;
-  my $min = $grammar->min;
-  my $max = $grammar->max;
-  $all++ unless $max;
-  my $matches = 0;
-  my $warn = "";
-  my $value = $grammar->{tag};
-  print "  " x $I, " looking for ", $all == 1 ? "all" : $max if $D;
-  if ($value)
-  {
-    print " $value, $min -> $max\n" if $D;
-    for (my $c = 0;
-         $c <= $#$items && ($all == 1 || !$max || $matches < $max);)
-    {
-      if ($items->[$c]{tag} eq $value)
-      {
-        my $w = $items->[$c]->validate_syntax2;
-        $warn .= $w;
-        splice @$items, $c, 1;
-        $matches++;
-      }
-      else
-      {
-        $c++;
-      }
-    }
-  }
-  else
-  {
-    # TODO - require Data::Dumper
-    die "What's a " . Data::Dumper->new([$grammar], ["grammar"])
-      unless ($value) = $grammar->{value} =~ /<<(.*)>>/;
-    die "Can't find $value in gedcom structures"
-      unless my $s = $grammar->structure($value);
-    $grammar->{structure} = $s;
-    print " $value, $min -> $max\n" if $D;
-    my ($m, $w);
-    do
-    {
-      ($m, $w) = $self->validate_structure($s, $items, $all);
-      if ($m)
-      {
-        $matches += $m;
-        $warn .= $w;
-      }
-    } while $m && ($all == 1 || !$max || $matches < $max);
-  }
-  $I--;
-  ($matches, $warn)
-}
-
-sub validate_structure
-{
-  my $self = shift;
-  my ($structure, $items, $all) = @_;
-  $all = 0 unless defined $all;
-  $I++;
-  print "  " x $I . "validate_structure($structure->{structure}, $all)\n" if $D;
-  my $warn = "";
-  my $total_matches = 0;
-  for my $item (@{$structure->{items}})
-  {
-    my $min = $item->min;
-    my $max = $item->max;
-    my ($matches, $w) = $self->validate_grammar($item, $items, $all);
-    $warn .= $w;
-    my $file = $self->{gedcom}{record}{file};
-    my $value = $item->{tag} || $item->{structure}{structure};
-    my $msg = "$file:$self->{line}: $self->{tag}" .
-              (defined $self->{xref} ? " $self->{xref} " : "") .
-              " has $matches $value" . ($matches == 1 ? "" : "s");
-    print "  " x $I . "$msg - minimum is $min maximum is $max\n" if $D;
-    if ($structure->{selection})
-    {
-      if ($matches)
-      {
-        $warn .= "$msg - minimum is $min\n" if $matches < $min;
-        $warn .= "$msg - maximum is $max\n" if $matches > $max && $max;
-        $total_matches += $matches;                   # only one item is allowed
-        last;
-      }
-    }
-    else
-    {
-      $warn .= "$msg - minimum is $min\n" if $matches < $min;
-      $warn .= "$msg - maximum is $max\n" if $matches > $max && $max;
-      $total_matches = 1 if $matches;                   # all items are required
-    }
-  }
-  print "  " x $I . "returning $total_matches matches\n" if $D;
-  $I--;
-  ($total_matches, $warn)
-}
-
-sub validate_syntax2
-{
-  my $self = shift;
-  $self->{gedcom}{validate_callback}->($self)
-    if defined $self->{gedcom}{validate_callback};
-  my $items = [ @{$self->{items}} ];
-  $I++;
-  my $grammar = $self->{grammar};
-  print "  " x $I . "validate_syntax2($grammar->{tag})\n" if $D;
-  my $warn = "";
-  my $file = $self->{gedcom}{record}{file};
-  my $here = "$file:$self->{line}: $self->{tag}" .
-             (defined $self->{xref} ? " $self->{xref}" : "");
-  for my $item (@$items)
-  {
-    print "  " x $I . "level $item->{level} on $self->{level}\n" if $D;
-    $warn .= "$here: Can't add level $item->{level} to $self->{level}\n"
-      if $item->{level} > $self->{level} + 1;
-  }
-  for my $item (@{$grammar->{items}})
-  {
-    my $min = $item->min;
-    my $max = $item->max;
-    my ($matches, $w) = $self->validate_grammar($item, $items, 1);
-    $warn .= $w;
-    my $value = $item->{tag} || $item->{structure}{structure};
-    my $msg = "$here has $matches $value" . ($matches == 1 ? "" : "s");
-    print "  " x $I . "$msg - minimum is $min maximum is $max\n" if $D;
-    $warn .= "$msg - minimum is $min\n" if $matches < $min;
-    $warn .= "$msg - maximum is $max\n" if $matches > $max && $max;
-  }
-  if (@$items)
-  {
-    my %tags = map { $_ => 1 } $grammar->items;
-    for my $c (@$items)
-    {
-      my $tag = $c->{tag};
-      my $msg = exists $tags{$tag} ? "an extra" : "not a";
-      $warn .= "$file:$c->{line}: $tag is $msg item of $self->{tag}\n"
-        unless $tag eq "CONT" || $tag eq "CONC" || substr($tag, 0, 1) eq "_";
-    }
-  }
-  $I--;
-  $warn
-}
-=end

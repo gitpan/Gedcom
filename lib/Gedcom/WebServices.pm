@@ -1,4 +1,4 @@
-# Copyright 2005-2009, Paul Johnson (paul@pjcj.net)
+# Copyright 2005-2012, Paul Johnson (paul@pjcj.net)
 
 require 5.006;
 
@@ -10,7 +10,7 @@ our $VERSION = "1.15";
 
 package Gedcom::WebServices;
 
-use Gedcom 1.16;
+use Gedcom 1.17;
 
 use Apache::Constants qw( OK DECLINED );
 use Apache::Request;
@@ -260,7 +260,7 @@ __END__
 
 Gedcom::WebServices - Basic web service routines for Gedcom.pm
 
-Version 1.16 - 24th April 2009
+Version 1.17 - 29th December 2012
 
 =head1 SYNOPSIS
 
@@ -269,7 +269,7 @@ Version 1.16 - 24th April 2009
 =head1 DESCRIPTION
 
 This module provides web service access to a GEDCOM file in conjunction with
-mod_perl.  Using it, A request for imformation can be made in the form of a URL
+mod_perl.  Using it, A request for information can be made in the form of a URL
 specifying the GEDCOM file to be used, which information is required and the
 format in which the information is to be delivered.  This information is then
 returned in the specified format.
@@ -427,11 +427,11 @@ See the BUGS file.  And the TODO file.
 
 =head1 VERSION
 
-Version 1.16 - 24th April 2009
+Version 1.17 - 29th December 2012
 
 =head1 LICENCE
 
-Copyright 2005-2009, Paul Johnson (paul@pjcj.net)
+Copyright 2005-2012, Paul Johnson (paul@pjcj.net)
 
 This software is free.  It is licensed under the same terms as Perl itself.
 

@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# Copyright 1998-2009, Paul Johnson (paul@pjcj.net)
+# Copyright 1998-2012, Paul Johnson (paul@pjcj.net)
 
 # This software is free.  It is licensed under the same terms as Perl itself.
 
@@ -14,7 +14,7 @@ require 5.005;
 use ExtUtils::MakeMaker;
 use ExtUtils::Manifest "maniread";
 
-if (0)
+if (0)  # For automating webservices testing
 {
     eval
     q{
@@ -26,8 +26,8 @@ if (0)
 
 $| = 1;
 
-my $Version  = "1.16";
-my $Date     = "24th April 2009";
+my $Version  = "1.17";
+my $Date     = "29th December 2012";
 my $Author   = 'paul@pjcj.net';
 
 my @perlbug  = ("perlbug", "-a", $Author,
@@ -42,15 +42,45 @@ $ExtUtils::MakeMaker::Verbose = 0;
 
 WriteMakefile
 (
-    NAME      => "Gedcom",
-    VERSION   => $Version,
-    AUTHOR    => 'Paul Johnson (paul@pjcj.net)',
-    ABSTRACT  => "Interface to genealogy GEDCOM files",
-    DIR       => [],
-    EXE_FILES => [ "cgi-bin/gedcom.cgi" ],
-    dist      => { COMPRESS => "gzip --best --force" },
-    clean     => { FILES => join " ",  map { "$_.version" } @versions },
-    depend    => { distdir => "@files" },
+    NAME       => "Gedcom",
+    VERSION    => $Version,
+    AUTHOR     => 'Paul Johnson (paul@pjcj.net)',
+    ABSTRACT   => "Interface to genealogy GEDCOM files",
+    DIR        => [],
+    EXE_FILES  => [ "cgi-bin/gedcom.cgi" ],
+    META_MERGE => {
+        license => [ "perl_5" ],
+        release_status => "stable",
+        prereqs => {
+            runtime => {
+                recommends => {
+                    "Date::Manip"       => 0,
+                    "Text::Soundex"     => 0,
+                    "Parse::RecDescent" => 0,
+                    "Roman"             => 0,
+                },
+            },
+        },
+        resources => {
+            license    => [ "http://dev.perl.org/licenses/" ],
+            bugtracker => {
+                web  => "https://github.com/pjcj/Gedcom.pm/issues",
+            },
+            repository => {
+                type => "git",
+                url  => "http://github.com/pjcj/Gedcom.pm",
+                web  => "http://github.com/pjcj/Gedcom.pm",
+            },
+            x_mailing_list => "http://lists.perl.org/list/perl-gedcom.html",
+        },
+        "meta-spec" => {
+            version => 2,
+            url     => "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+        },
+    },
+    dist       => { COMPRESS => "gzip --best --force" },
+    clean      => { FILES => join " ",  map { "$_.version" } @versions },
+    depend     => { distdir => "@files" },
 );
 
 print "\n";
@@ -187,45 +217,23 @@ EOM
 sub MY::postamble
 {
     qq[
-SET_VERSION = \$(PERL) -pi.version \\
-  -e 's/(^\\s*\\\$\$VERSION = ")\\d+\\.\\d+(";)/\$\${1}$Version\$\$2/;' \\
-  -e 's/(Version )\\d+\\.\\d+( - ).*/\$\${1}$Version\$\${2}$Date/;' \\
-  -e 's/(^\\s*use Gedcom(?:::\\w+)*\\s+)\\d+\\.\\d+;/\$\${1}$Version;/;'
-
 tags : @files
 \t ptags @files
 
-grammar :
+grammar : pure_all gedcom-5.5.grammar gedcom-5.5.1.grammar
 \t \$(PERL) -Mblib parse_grammar gedcom-5.5.grammar
-\t \$(SET_VERSION) -e 's/^ +//' lib/Gedcom/Grammar_5_5.pm
+\t \$(PERL) -Mblib parse_grammar gedcom-5.5.1.grammar
+\t \$(PERL) utils/makeh set_version $Version "$Date" lib/Gedcom/Grammar_5_5*.pm
+\t \$(PERL) -pi -e 's/^ +//' lib/Gedcom/Grammar_5_5*.pm
 
 @versions : Makefile.PL
-\t \$(SET_VERSION) @versions
+\t \$(PERL) utils/makeh set_version $Version "$Date" @versions
 
 README : lib/Gedcom.pm
 \t TERMCAP= COLUMNS=80 pod2text -s lib/Gedcom.pm | \\
-  \$(PERL) -n \\
-  -e 'print if (/NAME/ ... /^[A-Z ]+\$\$/) =~ /^\\d+\$\$/;' \\
-  -e 'print if (/DESCRIPTION/ ... /^[A-Z ]+\$\$/) =~ /^\\d+\$\$/;' \\
-  > README
+  \$(PERL) utils/makeh make_readme > README
 
-ppm : ppd pure_all
-\t tar cf Gedcom.tar blib
-\t gzip --best --force Gedcom.tar
-\t \$(PERL) -pi.bak \\
-  -e 's/(OS NAME=")[^"]*/\$\$1MSWin32/;' \\
-  -e 's/(ARCHITECTURE NAME=")[^"]*/\$\$1MSWin32-x86-multi-thread/;' \\
-  -e 's/(CODEBASE HREF=")[^"]*/\$\$1Gedcom.tar.gz/;' \\
-  Gedcom.ppd
-
-tst :: pure_all test_clean run_tests
-
-COVERDIR = /home/pjcj/g/perl/dev/Devel-Cover
-
-cover :
-\t \$(PERL) -Mblib=\$(COVERDIR) \$(COVERDIR)/cover -delete && \\
-   HARNESS_PERL_SWITCHES=-Mblib=\$(COVERDIR)\\ -MDevel::Cover=-ignore,Cover \$(MAKE) test && \\
-   \$(PERL) -Mblib=\$(COVERDIR) \$(COVERDIR)/cover -report html
+# Webservies section
 
 restart : all
 \t t/TEST -stop && rm -f t/logs/*log && t/TEST -start \$(TEST_OPTIONS)
@@ -254,6 +262,8 @@ cgi : all install
 \t cp `dirname \$(PERL)`/gedcom.cgi cgi-bin && \\
    rm *.ged && \\
    ln -s ../ged/* .
+
+# Reports
 
 ok :
 \t \@$Perlbug -okay  || echo "Please send your report manually to $Author"

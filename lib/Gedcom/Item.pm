@@ -1,4 +1,4 @@
-# Copyright 1998-2009, Paul Johnson (paul@pjcj.net)
+# Copyright 1998-2012, Paul Johnson (paul@pjcj.net)
 
 # This software is free.  It is licensed under the same terms as Perl itself.
 
@@ -16,7 +16,7 @@ package Gedcom::Item;
 use Symbol;
 
 use vars qw($VERSION);
-$VERSION = "1.16";
+$VERSION = "1.17";
 
 sub new
 {
@@ -64,14 +64,47 @@ sub read
   my $self = shift;
 
 # $self->{fh} = FileHandle->new($self->{file})
-  $self->{fh} = gensym;
-  open $self->{fh}, $self->{file} or die "Can't open file $self->{file}: $!\n";
-  binmode $self->{fh};
+  my $fh = $self->{fh} = gensym;
+  open $fh, $self->{file} or die "Can't open file $self->{file}: $!\n";
+
+  # try to determine encoding
+  my $encoding = "unknown";
+  my $bom = 0;
+  my $line1 = <$fh>;
+  if ($line1 =~ /^\xEF\xBB\xBF/)
+  {
+    $encoding = "utf-8";
+    $bom = 1;
+  }
+  else
+  {
+    while (<$fh>)
+    {
+      if (my ($char) = /\s*1\s+CHAR\s+(.*?)\s*$/i)
+      {
+        $encoding = $char =~ /utf\W*8/i ? "utf-8" : $char;
+        last;
+      }
+    }
+  }
+
+  # print "encoding is [$encoding]\n";
+  $self->{gedcom}->set_encoding($encoding) if $self->{gedcom};
+  if ($encoding eq "utf-8" && $] >= 5.8)
+  {
+    binmode $fh,    ":encoding(UTF-8)";
+    binmode STDOUT, ":encoding(UTF-8)";
+    binmode STDERR, ":encoding(UTF-8)";
+  }
+  else
+  {
+    binmode $fh;
+  }
 
   # find out how big the file is
-  seek($self->{fh}, 0, 2);
-  my $size = tell $self->{fh};
-  seek($self->{fh}, 0, 0);
+  seek($fh, 0, 2);
+  my $size = tell $fh;
+  seek($fh, $bom ? 3 : 0, 0);  # skip BOM
 
   # initial callback
   my $callback = $self->{callback};;
@@ -80,7 +113,7 @@ sub read
   my $count = 0;
   return undef
     if $callback &&
-       !$callback->($title, $txt1, "Record $count", tell $self->{fh}, $size);
+       !$callback->($title, $txt1, "Record $count", tell $fh, $size);
 
   $self->level($self->{grammar} ? -1 : -2);
 
@@ -105,7 +138,7 @@ sub read
                               line    => $vals[3],
                               cpos    => $vals[4],
                               grammar => $g->item($vals[0]),
-                              fh      => $self->{fh},
+                              fh      => $fh,
                               level   => 0);
         $record->{xref}  = $vals[1] if length $vals[1];
         $record->{value} = $vals[2] if length $vals[2];
@@ -153,7 +186,7 @@ sub read
         if ref $item &&
            $callback &&
            !$callback->($title, $txt1, "Record $count line " . $item->{line},
-                        tell $self->{fh}, $size);
+                        tell $fh, $size);
     }
   }
 
@@ -173,7 +206,8 @@ sub read
     {
       for my $item (@{$self->{items}})
       {
-        print I join("|", map { $item->{$_} || "" } qw(tag xref value line cpos));
+        print I join("|", map { $item->{$_} || "" }
+                              qw(tag xref value line cpos));
         print I "\n";
       }
       close I or warn "Can't close $if";
@@ -665,7 +699,7 @@ __END__
 
 Gedcom::Item - a base class for Gedcom::Grammar and Gedcom::Record
 
-Version 1.16 - 24th April 2009
+Version 1.17 - 29th December 2012
 
 =head1 SYNOPSIS
 
@@ -778,7 +812,7 @@ The subroutine takes five parameters:
   $current:   A count of how far through the file we are
   $total:     The extent of the file
 
-The subroutine should return true iff the file shuld continue to be
+The subroutine should return true iff the file should continue to be
 read.
 
 =head2 copy
@@ -943,7 +977,7 @@ the value() function and probably the items() function.
 
   my $sub_items = $item->_items;
 
-Return a reference to alist of all the sub-items, reading them from the
+Return a reference to a list of all the sub-items, reading them from the
 Gedcom file if they have not already been read.
 
 It should not be necessary to use this function.  See items().

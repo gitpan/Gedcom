@@ -1,13 +1,13 @@
 #!/usr/local/bin/perl -w
 
-# Copyright 1999-2009, Paul Johnson (paul@pjcj.net)
+# Copyright 1999-2012, Paul Johnson (paul@pjcj.net)
 
 # This software is free.  It is licensed under the same terms as Perl itself.
 
 # The latest version of this software should be available from my homepage:
 # http://www.pjcj.net
 
-# Version 1.16 - 24th April 2009
+# Version 1.17 - 29th December 2012
 
 use strict;
 
@@ -16,11 +16,11 @@ require 5.005;
 package Basic;
 
 use vars qw($VERSION);
-$VERSION = "1.16";
+$VERSION = "1.17";
 
 use Test ();
 
-use Gedcom 1.16;
+use Gedcom 1.17;
 
 eval "use Date::Manip";
 Date_Init("DateFormat=UK") if $INC{"Date/Manip.pm"};
@@ -242,7 +242,7 @@ sub import
     ok $n, "Line 1\nLine 2";
     ok $ged->validate;
 
-    my $f1 = $gedcom_file . "1";
+    my $f1 = $gedcom_file . $$;
     $ged->write($f1);
     ok $ged->validate;
     ok -e $f1;
@@ -270,13 +270,25 @@ sub import
     Test::plan tests => $tests;
   }
 
-  require Engine;
-  Engine->test(%args, subroutine => $basic_test);
+  my $g = _new_gedcom( \%args );
+  $basic_test->( $g, %args );
 
   if ($grammar)
   {
     ok unlink ((-d "t") ? "." : "..") . "/lib/Gedcom/Grammar_0_1.pm";
   }
+}
+
+sub _new_gedcom {
+  my $args = shift;
+  $args->{gedcom_file} = (-d "t" ? "" : "../") . "royal.ged"
+    unless defined $args->{gedcom_file};
+  $args->{read_only} = 1
+    unless defined $args->{read_only};
+
+  my $ged = Gedcom->new(%$args);
+
+  return $ged;
 }
 
 __DATA__

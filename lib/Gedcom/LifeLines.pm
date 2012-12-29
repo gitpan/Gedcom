@@ -1,4 +1,4 @@
-# Copyright 1999-2009, Paul Johnson (paul@pjcj.net)
+# Copyright 1999-2012, Paul Johnson (paul@pjcj.net)
 
 # This software is free.  It is licensed under the same terms as Perl itself.
 
@@ -20,10 +20,10 @@ BEGIN
   eval "use Roman ()";
 }
 
-use Gedcom 1.16;
+use Gedcom 1.17;
 
 use vars qw($VERSION @ISA @EXPORT);
-$VERSION = "1.16";
+$VERSION = "1.17";
 @ISA     = qw( Exporter );
 @EXPORT  = qw
 (
@@ -1139,14 +1139,14 @@ sub siblingset
 sub ancestorset
 {
   my ($set) = @_;
-  # TODO - set the data appropriatly
+  # TODO - set the data appropriately
   [ map { my $c = $_->[0]; map { [ $_ => 0 ] } $c->ancestors } @$set ]
 }
 
 sub descendentset
 {
   my ($set) = @_;
-  # TODO - set the data appropriatly
+  # TODO - set the data appropriately
   [ map { my $c = $_->[0]; map { [ $_ => 0 ] } $c->descendents } @$set ]
 }
 
@@ -1262,7 +1262,7 @@ __END__
 
 Gedcom::LifeLines - functions for lines2perl
 
-Version 1.16 - 24th April 2009
+Version 1.17 - 29th December 2012
 
 =head1 SYNOPSIS
 
