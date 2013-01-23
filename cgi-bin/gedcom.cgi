@@ -1,13 +1,13 @@
 #!/usr/bin/perl -w
 
-# Copyright 2001-2012, Paul Johnson (paul@pjcj.net)
+# Copyright 2001-2013, Paul Johnson (paul@pjcj.net)
 
 # This software is free.  It is licensed under the same terms as Perl itself.
 
 # The latest version of this software should be available from my homepage:
 # http://www.pjcj.net
 
-# Version 1.17 - 29th December 2012
+# Version 1.18 - 24th January 2013
 
 use strict;
 
@@ -17,7 +17,7 @@ use lib "/var/www/Gedcom/lib";
 
 use CGI qw(:cgi :html);
 
-use Gedcom::CGI 1.17;
+use Gedcom::CGI 1.18;
 
 my $op = param("op");
 
@@ -39,7 +39,7 @@ __END__
 
 main.cgi
 
-Version 1.17 - 29th December 2012
+Version 1.18 - 24th January 2013
 
 =head1 SYNOPSIS
 

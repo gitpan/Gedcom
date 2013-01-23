@@ -1,13 +1,13 @@
 #!/usr/local/bin/perl -w
 
-# Copyright 1999-2012, Paul Johnson (paul@pjcj.net)
+# Copyright 1999-2013, Paul Johnson (paul@pjcj.net)
 
 # This software is free.  It is licensed under the same terms as Perl itself.
 
 # The latest version of this software should be available from my homepage:
 # http://www.pjcj.net
 
-# Version 1.17 - 29th December 2012
+# Version 1.18 - 24th January 2013
 
 use strict;
 

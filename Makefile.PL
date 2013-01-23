@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# Copyright 1998-2012, Paul Johnson (paul@pjcj.net)
+# Copyright 1998-2013, Paul Johnson (paul@pjcj.net)
 
 # This software is free.  It is licensed under the same terms as Perl itself.
 
@@ -26,8 +26,8 @@ if (0)  # For automating webservices testing
 
 $| = 1;
 
-my $Version  = "1.17";
-my $Date     = "29th December 2012";
+my $Version  = "1.18";
+my $Date     = "24th January 2013";
 my $Author   = 'paul@pjcj.net';
 
 my @perlbug  = ("perlbug", "-a", $Author,
@@ -36,7 +36,7 @@ my @perlbug  = ("perlbug", "-a", $Author,
 my $Perlbug  = join " ", map { / / ? "'$_'" : $_ } @perlbug;
 
 my @files    = sort keys %{maniread()};
-my @versions = grep { $_ ne "README" && $_ ne "Makefile.PL" } @files;
+my @versions = grep { !/README|travis|Makefile\.PL/ } @files;
 
 $ExtUtils::MakeMaker::Verbose = 0;
 
@@ -228,6 +228,7 @@ grammar : pure_all gedcom-5.5.grammar gedcom-5.5.1.grammar
 
 @versions : Makefile.PL
 \t \$(PERL) utils/makeh set_version $Version "$Date" @versions
+\t \$(MAKE) grammar README
 
 README : lib/Gedcom.pm
 \t TERMCAP= COLUMNS=80 pod2text -s lib/Gedcom.pm | \\
