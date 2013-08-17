@@ -26,8 +26,8 @@ if (0)  # For automating webservices testing
 
 $| = 1;
 
-my $Version  = "1.18";
-my $Date     = "24th January 2013";
+my $Version  = "1.19";
+my $Date     = "18th August 2013";
 my $Author   = 'paul@pjcj.net';
 
 my @perlbug  = ("perlbug", "-a", $Author,
@@ -48,6 +48,7 @@ WriteMakefile
     ABSTRACT   => "Interface to genealogy GEDCOM files",
     DIR        => [],
     EXE_FILES  => [ "cgi-bin/gedcom.cgi" ],
+    PREREQ_PM  => { "Text::Soundex" => 0 },
     META_MERGE => {
         license => [ "perl_5" ],
         release_status => "stable",
@@ -55,7 +56,6 @@ WriteMakefile
             runtime => {
                 recommends => {
                     "Date::Manip"       => 0,
-                    "Text::Soundex"     => 0,
                     "Parse::RecDescent" => 0,
                     "Roman"             => 0,
                 },
@@ -97,25 +97,6 @@ else
 not found
 
 Date::Manip.pm is required to use the Gedcom function normalise_dates().  This
-function will be unavailable until you install this module, available from CPAN.
-In the meantime, you may continue to use the rest of Gedcom.pm.
-
-EOM
-}
-
-print "checking for Text::Soundex.pm...... ";
-
-eval "use Text::Soundex";
-if (my $m = $INC{"Text/Soundex.pm"})
-{
-    print "$m\n";
-}
-else
-{
-    print <<EOM;
-not found
-
-Text::Soundex.pm is required to use the Gedcom function soundex().  This
 function will be unavailable until you install this module, available from CPAN.
 In the meantime, you may continue to use the rest of Gedcom.pm.
 

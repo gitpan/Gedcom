@@ -4,7 +4,7 @@
       "Paul Johnson (paul@pjcj.net)"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "ExtUtils::MakeMaker version 6.64, CPAN::Meta::Converter version 2.120921",
+   "generated_by" : "ExtUtils::MakeMaker version 6.66, CPAN::Meta::Converter version 2.120921",
    "license" : [
       "perl_5"
    ],
@@ -24,8 +24,7 @@
          "recommends" : {
             "Date::Manip" : "0",
             "Parse::RecDescent" : "0",
-            "Roman" : "0",
-            "Text::Soundex" : "0"
+            "Roman" : "0"
          }
       }
    },
@@ -44,5 +43,5 @@
       },
       "x_mailing_list" : "http://lists.perl.org/list/perl-gedcom.html"
    },
-   "version" : "1.18"
+   "version" : "1.19"
 }
